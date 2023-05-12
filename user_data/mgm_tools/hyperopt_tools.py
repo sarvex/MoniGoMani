@@ -44,8 +44,7 @@ class HyperoptTools():
         from joblib import load
 
         logger.info(f"Reading pickled epochs from '{results_file}'")
-        data = load(results_file)
-        return data
+        return load(results_file)
 
     @staticmethod
     def _read_results(results_file: Path) -> List:
@@ -122,7 +121,7 @@ class HyperoptTools():
                     if non_optimized_param not in all_space_params:
                         all_space_params[non_optimized_param] = space_non_optimized[non_optimized_param]
 
-            if space in ['buy', 'sell']:
+            if space in {'buy', 'sell'}:
                 result_dict.setdefault('params', {}).update(all_space_params)
             elif space == 'roi':
                 # TODO: get rid of OrderedDict when support for python 3.6 will be
@@ -169,8 +168,7 @@ class HyperoptTools():
 
     @staticmethod
     def _space_params(params, space: str, r: int = None) -> Dict:
-        d = params.get(space)
-        if d:
+        if d := params.get(space):
             # Round floats to `r` digits after the decimal point if requested
             return round_dict(d, r) if r else d
         return {}
@@ -195,7 +193,7 @@ class HyperoptTools():
 
     @staticmethod
     def is_best_loss(results, current_best_loss: float) -> bool:
-        return bool(results['loss'] < current_best_loss)
+        return results['loss'] < current_best_loss
 
     @staticmethod
     def format_results_explanation_string(results_metrics: Dict, stake_currency: str) -> str:
@@ -267,7 +265,7 @@ class HyperoptTools():
         trials['Trades'] = trials['Trades'].astype(str)
         perc_multi = 1 if legacy_mode else 100
         trials['Epoch'] = trials['Epoch'].apply(
-            lambda x: '{}/{}'.format(str(x).rjust(len(str(total_epochs)), ' '), total_epochs)
+            lambda x: f"{str(x).rjust(len(str(total_epochs)), ' ')}/{total_epochs}"
         )
         trials['Avg profit'] = trials['Avg profit'].apply(
             lambda x: f'{x * perc_multi:,.2f}%'.rjust(7, ' ') if not isna(x) else "--".rjust(7, ' ')
@@ -295,12 +293,10 @@ class HyperoptTools():
             for i in range(len(trials)):
                 if trials.loc[i]['is_profit']:
                     for j in range(len(trials.loc[i])-3):
-                        trials.iat[i, j] = "{}{}{}".format(Fore.GREEN,
-                                                           str(trials.loc[i][j]), Fore.RESET)
+                        trials.iat[i, j] = f"{Fore.GREEN}{str(trials.loc[i][j])}{Fore.RESET}"
                 if trials.loc[i]['is_best'] and highlight_best:
                     for j in range(len(trials.loc[i])-3):
-                        trials.iat[i, j] = "{}{}{}".format(Style.BRIGHT,
-                                                           str(trials.loc[i][j]), Style.RESET_ALL)
+                        trials.iat[i, j] = f"{Style.BRIGHT}{str(trials.loc[i][j])}{Style.RESET_ALL}"
 
         trials = trials.drop(columns=['is_initial_point', 'is_best', 'is_profit'])
         if remove_header > 0:
@@ -315,7 +311,7 @@ class HyperoptTools():
                 trials.to_dict(orient='list'), tablefmt='psql',
                 headers='keys', stralign="right"
             )
-            table = "\n".join(table.split("\n")[0:remove_header])
+            table = "\n".join(table.split("\n")[:remove_header])
         else:
             table = tabulate.tabulate(
                 trials.to_dict(orient='list'), tablefmt='psql',

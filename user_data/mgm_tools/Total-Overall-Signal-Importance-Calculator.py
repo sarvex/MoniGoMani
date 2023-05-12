@@ -148,7 +148,7 @@ full_signal_format = '{:<35s}{:>6s} | {:>6s} | {:>6s} | {:>6s}'
 
 
 def print_signal(signal, importance):
-    print(signal_format.format(str(signal) + ":", str(round(importance, 2)) + "%"))
+    print(signal_format.format(f"{str(signal)}:", f"{str(round(importance, 2))}%"))
 
 
 def print_full_signal_header():
@@ -156,28 +156,46 @@ def print_full_signal_header():
 
 
 def print_full_buy_signal(calculator_data, signal, importance):
-    print(full_signal_format.format(str(signal) + ":",
-                                    str(round(importance, 2)) + "%",
-                                    str(calculator_data.buy_params["buy_downwards_trend_" + signal + "_weight"]) + "%",
-                                    str(calculator_data.buy_params["buy_sideways_trend_" + signal + "_weight"]) + "%",
-                                    str(calculator_data.buy_params["buy_upwards_trend_" + signal + "_weight"]) + "%"))
+    print(
+        full_signal_format.format(
+            f"{str(signal)}:",
+            f"{str(round(importance, 2))}%",
+            f'{str(calculator_data.buy_params[f"buy_downwards_trend_{signal}_weight"])}%',
+            f'{str(calculator_data.buy_params[f"buy_sideways_trend_{signal}_weight"])}%',
+            f'{str(calculator_data.buy_params[f"buy_upwards_trend_{signal}_weight"])}%',
+        )
+    )
 
 
 def print_full_sell_signal(calculator_data, signal, importance):
-    print(full_signal_format.format(str(signal) + ":",
-                                    str(round(importance, 2)) + "%",
-                                    str(calculator_data.sell_params["sell_downwards_trend_" + signal + "_weight"]) +
-                                    "%",
-                                    str(calculator_data.sell_params["sell_sideways_trend_" + signal + "_weight"]) + "%",
-                                    str(calculator_data.sell_params["sell_upwards_trend_" + signal + "_weight"]) + "%"))
+    print(
+        full_signal_format.format(
+            f"{str(signal)}:",
+            f"{str(round(importance, 2))}%",
+            (
+                str(
+                    calculator_data.sell_params[
+                        f"sell_downwards_trend_{signal}_weight"
+                    ]
+                )
+                + "%"
+            ),
+            f'{str(calculator_data.sell_params[f"sell_sideways_trend_{signal}_weight"])}%',
+            f'{str(calculator_data.sell_params[f"sell_upwards_trend_{signal}_weight"])}%',
+        )
+    )
 
 
 def print_full_avg_signal(signal, importance, avg_weights):
-    print(full_signal_format.format(str(signal) + ":",
-                                    str(round(importance, 2)) + "%",
-                                    str(avg_weights["avg_downwards_trend_" + signal + "_weight"]) + "%",
-                                    str(avg_weights["avg_sideways_trend_" + signal + "_weight"]) + "%",
-                                    str(avg_weights["avg_upwards_trend_" + signal + "_weight"]) + "%"))
+    print(
+        full_signal_format.format(
+            f"{str(signal)}:",
+            f"{str(round(importance, 2))}%",
+            f'{str(avg_weights[f"avg_downwards_trend_{signal}_weight"])}%',
+            f'{str(avg_weights[f"avg_sideways_trend_{signal}_weight"])}%',
+            f'{str(avg_weights[f"avg_upwards_trend_{signal}_weight"])}%',
+        )
+    )
 
 
 def print_sell_unclogger_signal(calculator_data):
@@ -303,16 +321,16 @@ def main():
         # Parse it as a dictionary
         json_data = json.load(file_object)
 
-        # Convert the JSON data to params needed for the calculator
-        loaded_buy_params = {}
-        for buy_param in calculator_data.buy_params:
-            if str(buy_param) in json_data['params']:
-                loaded_buy_params[str(buy_param)] = json_data['params'][str(buy_param)]
-        loaded_sell_params = {}
-        for sell_param in calculator_data.sell_params:
-            if str(sell_param) in json_data['params']:
-                loaded_sell_params[str(sell_param)] = json_data['params'][str(sell_param)]
-
+        loaded_buy_params = {
+            str(buy_param): json_data['params'][str(buy_param)]
+            for buy_param in calculator_data.buy_params
+            if str(buy_param) in json_data['params']
+        }
+        loaded_sell_params = {
+            str(sell_param): json_data['params'][str(sell_param)]
+            for sell_param in calculator_data.sell_params
+            if str(sell_param) in json_data['params']
+        }
         # Overwrite the params stored in the file during this calculation
         calculator_data.buy_params = loaded_buy_params
         calculator_data.sell_params = loaded_sell_params
@@ -330,27 +348,50 @@ def main():
     for indicator in buy_indicator_names:
         buy_weight = 0
         for trend in trend_names:
-            if args.fix_missing \
-                    & ("buy_" + trend + "_trend_" + indicator + "_weight" not in calculator_data.buy_params):
-                calculator_data.buy_params["buy_" + trend + "_trend_" + indicator + "_weight"] = 0
-            buy_weight += int(calculator_data.buy_params["buy_" + trend + "_trend_" + indicator + "_weight"])
+            if args.fix_missing & (
+                f"buy_{trend}_trend_{indicator}_weight"
+                not in calculator_data.buy_params
+            ):
+                calculator_data.buy_params[f"buy_{trend}_trend_{indicator}_weight"] = 0
+            buy_weight += int(
+                calculator_data.buy_params[
+                    f"buy_{trend}_trend_{indicator}_weight"
+                ]
+            )
         total_overall_buy_weights[indicator] = buy_weight / len(trend_names)
     for indicator in sell_indicator_names:
         sell_weight = 0
         for trend in trend_names:
-            if args.fix_missing \
-                    & ("sell_" + trend + "_trend_" + indicator + "_weight" not in calculator_data.sell_params):
-                calculator_data.sell_params["sell_" + trend + "_trend_" + indicator + "_weight"] = 0
-            sell_weight += int(calculator_data.sell_params["sell_" + trend + "_trend_" + indicator + "_weight"])
+            if args.fix_missing & (
+                f"sell_{trend}_trend_{indicator}_weight"
+                not in calculator_data.sell_params
+            ):
+                calculator_data.sell_params[f"sell_{trend}_trend_{indicator}_weight"] = 0
+            sell_weight += int(
+                calculator_data.sell_params[
+                    f"sell_{trend}_trend_{indicator}_weight"
+                ]
+            )
         total_overall_sell_weights[indicator] = sell_weight / len(trend_names)
-    for combined_indicator in combined_indicator_names.keys():
-        indicators = combined_indicator_names[combined_indicator]
-
+    for combined_indicator, indicators in combined_indicator_names.items():
         for trend in trend_names:
-            avg_weight = (int(calculator_data.buy_params["buy_" + trend + "_trend_" + indicators[0] + "_weight"]) +
-                          int(calculator_data.sell_params["sell_" + trend + "_trend_" + indicators[-1] + "_weight"])) \
-                         / 2
-            avg_trend_weights["avg_" + trend + "_trend_" + combined_indicator + "_weight"] = avg_weight
+            avg_weight = (
+                (
+                    int(
+                        calculator_data.buy_params[
+                            f"buy_{trend}_trend_{indicators[0]}_weight"
+                        ]
+                    )
+                    + int(
+                        calculator_data.sell_params[
+                            f"sell_{trend}_trend_{indicators[-1]}_weight"
+                        ]
+                    )
+                )
+            ) / 2
+            avg_trend_weights[
+                f"avg_{trend}_trend_{combined_indicator}_weight"
+            ] = avg_weight
 
         total_overall_weights[combined_indicator] = (total_overall_buy_weights[indicators[0]] +
                                                      total_overall_sell_weights[indicators[-1]]) / 2

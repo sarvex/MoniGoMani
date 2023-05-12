@@ -40,9 +40,15 @@ def main():
     data = resp.json()
 
     pairs_with_given_quote = sorted(
-        ["/{}".format(currency).join(str(d['symbol']).rsplit(currency, 1)) for d in data['symbols'] if
-         d['quoteAsset'] == currency and d['status'] == "TRADING" and d["isSpotTradingAllowed"] == True and d[
-             'isMarginTradingAllowed'] == True])
+        [
+            f"/{currency}".join(str(d['symbol']).rsplit(currency, 1))
+            for d in data['symbols']
+            if d['quoteAsset'] == currency
+            and d['status'] == "TRADING"
+            and d["isSpotTradingAllowed"] == True
+            and d['isMarginTradingAllowed'] == True
+        ]
+    )
     print(json.dumps(pairs_with_given_quote, indent=4, sort_keys=True))
 
 
